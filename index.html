@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Habit Tracker</title>
+<style>
+  :root {
+    --paper: #F6F5EE;
+    --card: #FFFFFF;
+    --border: #E9E6D9;
+    --border2: #DAD6C6;
+    --ink: #26301F;
+    --muted: #8A9178;
+    --muted2: #9CA089;
+    --green: #3F5A3D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: #EDEBDD;
+    margin: 0;
+    padding: 2rem 1rem;
+    color: var(--ink);
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid #E4E1D4;
+    border-radius: 20px;
+    padding: 2rem;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid #E0DCCB;
+    padding-bottom: 1.25rem;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 30px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .today-stat { text-align: right; }
+  .today-stat .num {
+    font-family: Georgia, serif;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--green);
+  }
+  .today-stat .num span { font-size: 18px; color: var(--muted2); }
+  .today-stat .pct { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 0.04em; }
+
+  .add-row { display: flex; gap: 8px; margin-bottom: 1.75rem; }
+  .add-row input {
+    flex: 1;
+    padding: 11px 14px;
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+  }
+  .add-row button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 16px;
+    border: none;
+    background: var(--green);
+    color: var(--paper);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem 1.25rem 0.75rem;
+    margin-bottom: 1.75rem;
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5A6350;
+    letter-spacing: 0.03em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .habit-list { display: flex; flex-direction: column; gap: 10px; }
+  .habit-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+  }
+  .habit-top { display: flex; align-items: center; gap: 10px; }
+  .habit-name { font-family: Georgia, serif; font-size: 16px; flex: 1; }
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .mark-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-weight: 500;
+    font-family: inherit;
+  }
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #C7C3B0;
+    display: flex;
+    padding: 4px;
+  }
+  .bars-row { display: flex; align-items: flex-end; gap: 5px; margin-top: 14px; height: 34px; }
+  .bar {
+    flex: 1;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 0;
+    transition: height 0.15s ease;
+  }
+  .letters-row { display: flex; justify-content: space-between; margin-top: 4px; }
+  .letters-row span { flex: 1; text-align: center; font-size: 9px; color: #B7B4A5; }
+  .week-count { font-size: 11px; color: var(--muted2); margin-top: 6px; }
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted2);
+    font-size: 14px;
+    font-family: Georgia, serif;
+    font-style: italic;
+    border: 1px dashed var(--border2);
+    border-radius: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="eyebrow">Personal practice log</div>
+        <h1>Habit tracker</h1>
+      </div>
+      <div class="today-stat" id="todayStat"></div>
+    </header>
+
+    <div class="add-row">
+      <input id="newHabitInput" type="text" placeholder="Plant a new habit — e.g. Read 20 minutes" />
+      <button id="addBtn">+ Add</button>
+    </div>
+
+    <div class="chart-card" id="chartCard" style="display:none;">
+      <div class="chart-title">Fourteen-day growth</div>
+      <svg id="chartSvg" width="100%" height="150" viewBox="0 0 660 150" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="habit-list" id="habitList"></div>
+    <div class="empty" id="emptyState">Nothing planted yet. Add a habit above to begin.</div>
+  </div>
+
+<script>
+const PALETTE = [
+  { ink: "#3F5A3D", tint: "#E4EBDD" },
+  { ink: "#8A5A2B", tint: "#F0E4D2" },
+  { ink: "#4A5C74", tint: "#DFE6ED" },
+  { ink: "#7A4A5E", tint: "#EEE0E5" },
+  { ink: "#8C7A2E", tint: "#F1EBD3" },
+  { ink: "#3F6B6A", tint: "#DDEAE9" },
+];
+
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const daysAgoKey = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+};
+const fmtLabel = (key) => {
+  const d = new Date(key + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+const dayLetter = (key) => {
+  const d = new Date(key + "T00:00:00");
+  return d.toLocaleDateString("en-US", { weekday: "narrow" });
+};
+
+let habits = JSON.parse(localStorage.getItem("habits") || "[]");
+let logs = JSON.parse(localStorage.getItem("logs") || "{}");
+
+function save() {
+  localStorage.setItem("habits", JSON.stringify(habits));
+  localStorage.setItem("logs", JSON.stringify(logs));
+}
+
+function streak(habitId) {
+  const habitLogs = logs[habitId] || {};
+  let s = 0, i = habitLogs[todayKey()] ? 0 : 1;
+  while (habitLogs[daysAgoKey(i)]) { s++; i++; }
+  return s;
+}
+
+function last14() { return Array.from({ length: 14 }, (_, i) => daysAgoKey(13 - i)); }
+
+function render() {
+  const today = todayKey();
+  const l14 = last14();
+  const l7 = l14.slice(7);
+
+  const doneTodayCount = habits.filter(h => logs[h.id] && logs[h.id][today]).length;
+  const overallToday = habits.length ? Math.round((doneTodayCount / habits.length) * 100) : 0;
+
+  document.getElementById("todayStat").innerHTML = habits.length
+    ? `<div class="num">${doneTodayCount}<span>/${habits.length}</span></div><div class="pct">today, ${overallToday}%</div>`
+    : "";
+
+  document.getElementById("emptyState").style.display = habits.length ? "none" : "block";
+  document.getElementById("chartCard").style.display = habits.length ? "block" : "none";
+
+  if (habits.length) renderChart(l14);
+
+  const list = document.getElementById("habitList");
+  list.innerHTML = "";
+
+  habits.forEach(h => {
+    const s = streak(h.id);
+    const doneToday = !!(logs[h.id] && logs[h.id][today]);
+    const weekCount = l7.filter(k => logs[h.id] && logs[h.id][k]).length;
+
+    const card = document.createElement("div");
+    card.className = "habit-card";
+
+    const barsHtml = l14.map((key, idx) => {
+      const done = !!(logs[h.id] && logs[h.id][key]);
+      const isToday = key === today;
+      let run = 0;
+      if (done) {
+        for (let j = idx; j >= 0 && logs[h.id] && logs[h.id][l14[j]]; j--) run++;
+      }
+      const height = done ? Math.min(34, 12 + run * 4) : 6;
+      return `<button class="bar" data-key="${key}" data-habit="${h.id}" title="${key}${done ? ' — done' : ''}" style="height:${height}px;border:${isToday ? '1px solid ' + h.ink : 'none'};background:${done ? h.ink : '#EDEBE0'}"></button>`;
+    }).join("");
+
+    const lettersHtml = l14.map(key => `<span>${dayLetter(key)}</span>`).join("");
+
+    card.innerHTML = `
+      <div class="habit-top">
+        <span class="habit-name">${escapeHtml(h.name)}</span>
+        ${s > 0 ? `<span class="streak-badge" style="color:${h.ink};background:${h.tint}">🌱 ${s}</span>` : ""}
+        <button class="mark-btn" data-habit="${h.id}" data-action="mark" style="border:${doneToday ? '1px solid ' + h.ink : '1px solid #DAD6C6'};background:${doneToday ? h.ink : '#FFFFFF'};color:${doneToday ? '#FFFFFF' : '#5A6350'}">
+          ✓ ${doneToday ? "Done" : "Mark"}
+        </button>
+        <button class="del-btn" data-habit="${h.id}" data-action="delete">✕</button>
+      </div>
+      <div class="bars-row">${barsHtml}</div>
+      <div class="letters-row">${lettersHtml}</div>
+      <div class="week-count">${weekCount} of 7 this week</div>
+    `;
+    list.appendChild(card);
+  });
+
+  // wire events
+  list.querySelectorAll(".bar").forEach(btn => {
+    btn.addEventListener("click", () => toggleDay(btn.dataset.habit, btn.dataset.key));
+  });
+  list.querySelectorAll('[data-action="mark"]').forEach(btn => {
+    btn.addEventListener("click", () => toggleDay(btn.dataset.habit, today));
+  });
+  list.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener("click", () => removeHabit(btn.dataset.habit));
+  });
+}
+
+function renderChart(l14) {
+  const svg = document.getElementById("chartSvg");
+  const w = 660, h = 150, padL = 30, padB = 20, padT = 10;
+  const plotW = w - padL - 10, plotH = h - padT - padB;
+
+  const points = l14.map((key, i) => {
+    let doneCount = 0;
+    habits.forEach(hh => { if (logs[hh.id] && logs[hh.id][key]) doneCount++; });
+    const rate = habits.length ? Math.round((doneCount / habits.length) * 100) : 0;
+    const x = padL + (i / (l14.length - 1)) * plotW;
+    const y = padT + plotH - (rate / 100) * plotH;
+    return { x, y, rate, label: fmtLabel(key) };
+  });
+
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${padT + plotH} L ${points[0].x.toFixed(1)} ${padT + plotH} Z`;
+
+  const gridLines = [0, 25, 50, 75, 100].map(v => {
+    const y = padT + plotH - (v / 100) * plotH;
+    return `<line x1="${padL}" y1="${y}" x2="${w - 10}" y2="${y}" stroke="#EEEBDF" stroke-dasharray="2 4" />
+            <text x="${padL - 6}" y="${y + 3}" font-size="9" fill="#A9A895" text-anchor="end">${v}</text>`;
+  }).join("");
+
+  const labels = points.filter((_, i) => i % 2 === 1).map(p =>
+    `<text x="${p.x}" y="${h - 4}" font-size="9" fill="#A9A895" text-anchor="middle">${p.label}</text>`
+  ).join("");
+
+  const dots = points.map(p => `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#3F5A3D">
+    <title>${p.rate}%</title>
+  </circle>`).join("");
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3F5A3D" stop-opacity="0.22" />
+        <stop offset="100%" stop-color="#3F5A3D" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    <path d="${areaPath}" fill="url(#growthFill)" stroke="none" />
+    <path d="${linePath}" fill="none" stroke="#3F5A3D" stroke-width="2" />
+    ${dots}
+    ${labels}
+  `;
+}
+
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function addHabit() {
+  const input = document.getElementById("newHabitInput");
+  const name = input.value.trim();
+  if (!name) return;
+  const c = PALETTE[habits.length % PALETTE.length];
+  habits.push({ id: "h_" + Date.now(), name, ink: c.ink, tint: c.tint });
+  input.value = "";
+  save();
+  render();
+}
+
+function removeHabit(id) {
+  habits = habits.filter(h => h.id !== id);
+  delete logs[id];
+  save();
+  render();
+}
+
+function toggleDay(habitId, key) {
+  logs[habitId] = logs[habitId] || {};
+  if (logs[habitId][key]) delete logs[habitId][key];
+  else logs[habitId][key] = true;
+  save();
+  render();
+}
+
+document.getElementById("addBtn").addEventListener("click", addHabit);
+document.getElementById("newHabitInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") addHabit();
+});
+
+render();
+</script>
+</body>
+</html>
